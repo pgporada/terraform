@@ -13,6 +13,7 @@ package schema
 
 import (
 	"fmt"
+	// "log"
 	"os"
 	"reflect"
 	"sort"
@@ -365,12 +366,14 @@ func (m schemaMap) Diff(
 		config: c,
 	}
 
+	// log.Printf("[DEBUG] Inside schemaMap.Diff:\nInstanceState: %#v\nResourceConfig: %#v", s, c)
 	for k, schema := range m {
 		err := m.diff(k, schema, result, d, false)
 		if err != nil {
 			return nil, err
 		}
 	}
+	// log.Printf("[DEBUG] Inside schemaMap.Diff AFTER:\nInstanceDiff: %#v", result)
 
 	// If the diff requires a new resource, then we recompute the diff
 	// so we have the complete new resource diff, and preserve the
@@ -634,6 +637,19 @@ func (m schemaMap) InternalValidate(topSchemaMap schemaMap) error {
 	return nil
 }
 
+func (m schemaMap) markAsRemoved(k string, schema *Schema, diff *terraform.InstanceDiff) {
+	existingDiff, ok := diff.Attributes[k]
+	if ok {
+		existingDiff.NewRemoved = true
+		diff.Attributes[k] = schema.finalizeDiff(existingDiff)
+		return
+	}
+
+	diff.Attributes[k] = schema.finalizeDiff(&terraform.ResourceAttrDiff{
+		NewRemoved: true,
+	})
+}
+
 func (m schemaMap) diff(
 	k string,
 	schema *Schema,
@@ -757,6 +773,7 @@ func (m schemaMap) diffList(
 
 	switch t := schema.Elem.(type) {
 	case *Resource:
+		countDiff, cOk := diff.GetAttribute(k + ".#")
 		// This is a complex resource
 		for i := 0; i < maxLen; i++ {
 			for k2, schema := range t.Schema {
@@ -764,6 +781,15 @@ func (m schemaMap) diffList(
 				err := m.diff(subK, schema, diff, d, all)
 				if err != nil {
 					return err
+				}
+
+				// If parent list is being removed
+				// remove all subfields which were missed by the diff func
+				// We process these separately because type-specific diff functions
+				// lack the context (hierarchy of fields)
+				subKeyIsCount := strings.HasSuffix(subK, ".#")
+				if cOk && countDiff.New == "0" && !subKeyIsCount {
+					m.markAsRemoved(subK, schema, diff)
 				}
 			}
 		}
