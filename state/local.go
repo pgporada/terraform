@@ -121,28 +121,30 @@ func createFileAndDirs(path string) (*os.File, error) {
 }
 
 // WriteState for LocalState always persists the state as well.
+// TODO: this should use a safer method of writing state, by storing in a temp
+//       file on the same filesystem, and renaming the file over the original.
 //
 // StateWriter impl.
 func (s *LocalState) WriteState(state *terraform.State) error {
-	if state == nil {
-		// if we have no state, don't write anything.
-		return nil
-	}
-
 	if s.stateFileOut == nil {
 		if err := s.createStateFiles(); err != nil {
 			return nil
 		}
 	}
+	defer s.stateFileOut.Sync()
 
 	s.state = state
 
 	if _, err := s.stateFileOut.Seek(0, os.SEEK_SET); err != nil {
 		return err
 	}
-
 	if err := s.stateFileOut.Truncate(0); err != nil {
 		return err
+	}
+
+	if state == nil {
+		// if we have no state, don't write anything else.
+		return nil
 	}
 
 	s.state.IncrementSerialMaybe(s.readState)
@@ -152,7 +154,6 @@ func (s *LocalState) WriteState(state *terraform.State) error {
 		return err
 	}
 
-	s.stateFileOut.Sync()
 	s.written = true
 	return nil
 }
