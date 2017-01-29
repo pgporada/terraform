@@ -42,6 +42,13 @@ func Provider() terraform.ResourceProvider {
 
 			"assume_role": assumeRoleSchema(),
 
+            "shared_config_file": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: descriptions["shared_config_file"],
+			},
+
 			"shared_credentials_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -420,6 +427,9 @@ func init() {
 		"profile": "The profile for API operations. If not set, the default profile\n" +
 			"created with `aws configure` will be used.",
 
+		"shared_config_file": "The path to the shared config file. If not set\n" +
+			"this defaults to ~/.aws/config.",
+
 		"shared_credentials_file": "The path to the shared credentials file. If not set\n" +
 			"this defaults to ~/.aws/credentials.",
 
@@ -479,6 +489,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
 		Profile:                 d.Get("profile").(string),
+		ConfigFilename:          d.Get("shared_config_file").(string),
 		CredsFilename:           d.Get("shared_credentials_file").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
