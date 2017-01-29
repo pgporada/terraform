@@ -39,6 +39,7 @@ explained below:
 - Static credentials
 - Environment variables
 - Shared credentials file
+- Shared config file
 - EC2 Role
 
 ### Static credentials ###
@@ -95,6 +96,30 @@ Usage:
 provider "aws" {
   region                   = "us-west-2"
   shared_credentials_file  = "/Users/tf_user/.aws/creds"
+  profile                  = "customprofile"
+}
+```
+
+### Shared Config file
+
+You can use an AWS config file to specify a different aws configuration. The
+default location is `$HOME/.aws/config` on Linux and OS X, or
+`"%USERPROFILE%\.aws\config"` for Windows users. If we fail to
+detect config inline, or in the environment, Terraform will check
+this location. You can optionally specify a different location in the
+configuration by providing the `shared_config_file` attribute, or
+in the environment with the `AWS_CONFIG_FILE` variable. This
+method also supports a `profile` configuration and matching
+`AWS_PROFILE` environment variable. Ideally this is used in tandem with the
+`shared_credentials_file`:
+
+Usage:
+
+```
+provider "aws" {
+  region                   = "us-east-2"
+  shared_credentials_file  = "/Users/tf_user/.aws/creds-customprofile"
+  shared_config_file       = "/Users/tf_user/.aws/config-customprofile"
   profile                  = "customprofile"
 }
 ```
