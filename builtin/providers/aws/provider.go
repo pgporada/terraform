@@ -42,10 +42,10 @@ func Provider() terraform.ResourceProvider {
 
 			"assume_role": assumeRoleSchema(),
 
-            "shared_config_file": {
+			"shared_config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
+				DefaultFunc: schema.EnvDefaultFunc("AWS_CONFIG_FILE", nil),
 				Description: descriptions["shared_config_file"],
 			},
 
@@ -485,6 +485,13 @@ func init() {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+
+	ConfigFilename := d.Get("shared_config_filename").(string)
+	if ConfigFilename == "" {
+		return nil, fmt.Errorf(
+			"Phil was here!")
+	}
+
 	config := Config{
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
