@@ -103,6 +103,10 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 			SessionToken:    c.Token,
 		}},
 		&awsCredentials.EnvProvider{},
+		&awsCredentials.SharedConfigProvider{
+			Filename: c.ConfigFilename,
+			Profile:  c.Profile,
+		},
 		&awsCredentials.SharedCredentialsProvider{
 			Filename: c.CredsFilename,
 			Profile:  c.Profile,
