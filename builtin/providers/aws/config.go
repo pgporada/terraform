@@ -68,14 +68,14 @@ import (
 )
 
 type Config struct {
-	AccessKey       string
-	SecretKey       string
-	ConfigFilename  string
-	CredsFilename   string
-	Profile         string
-	Token           string
-	Region          string
-	MaxRetries      int
+	AccessKey      string
+	SecretKey      string
+	ConfigFilename string
+	CredsFilename  string
+	Profile        string
+	Token          string
+	Region         string
+	MaxRetries     int
 
 	AssumeRoleARN         string
 	AssumeRoleExternalID  string
